@@ -14,7 +14,6 @@ struct {
 static struct proc *initproc;
 
 int nextpid = 1;
-int next_counter = 1;
 extern void forkret(void);
 extern void trapret(void);
 
@@ -46,7 +45,8 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  p->counter = next_counter++;
+  p->tickets = 1;   //set default number of ticket to be 1              
+  p->ticks = 0;     //set default number of ticks to be 0  
   release(&ptable.lock);
 
   // Allocate kernel stack if possible.
@@ -256,6 +256,51 @@ wait(void)
 //      via swtch back to the scheduler.
 void
 scheduler(void)
+{
+  struct proc *p;
+
+  for(;;){
+    // Enable interrupts on this processor.
+    sti();
+
+    // Loop over process table looking for process to run.
+    acquire(&ptable.lock);
+
+    // Local Variables to track the tickets
+    int total_tickets = 0;
+    int ticket_no;
+    int tickets_passed = 0;
+
+     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+            if (p->state == RUNNABLE) {
+                total_tickets += p->tickets;
+            }
+        }
+
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE)
+        continue;
+
+      // Switch to chosen process.  It is the process's job
+      // to release ptable.lock and then reacquire it
+      // before jumping back to us.
+      proc = p;
+      switchuvm(p);
+      p->state = RUNNING;
+      swtch(&cpu->scheduler, proc->context);
+      switchkvm();
+
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      proc = 0;
+    }
+    release(&ptable.lock);
+
+  }
+}
+
+void
+scheduler2(void)
 {
   struct proc *p;
 

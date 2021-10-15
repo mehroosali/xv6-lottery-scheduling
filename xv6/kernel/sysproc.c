@@ -6,6 +6,28 @@
 #include "proc.h"
 #include "sysfunc.h"
 
+int total_tickets;
+
+int 
+sys_settickets(void)
+{
+  int number_of_tickets;
+  argint(0, &number_of_tickets);
+  if(number_of_tickets <= 0)  
+    return -1;
+
+  total_tickets -= proc->tickets;
+  proc->tickets = number_of_tickets;
+  total_tickets += proc->tickets;
+  return 0;
+}
+
+int 
+sys_getpinfo(void)
+{
+  return 0;
+}
+
 int
 sys_fork(void)
 {

@@ -20,7 +20,8 @@ USER_PROGS := \
 	hello\
 	readcount1\
 	readcount2\
-	readcount3
+	readcount3\
+	setticket\
 
 USER_PROGS := $(addprefix user/, $(USER_PROGS))
 
