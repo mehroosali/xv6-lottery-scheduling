@@ -77,9 +77,13 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   
+/* The following code is added/modified by Mehroos Ali and mxa200089.
+  new entries in proc structure.
+*/
   int tickets;
   int inuse;
   int ticks;
+/* End of added code  */
 };
 
 // Process memory is laid out contiguously, low addresses first:

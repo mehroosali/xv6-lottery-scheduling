@@ -25,7 +25,6 @@ main(int argc, char *argv[])
          }
       }
    }
-
    check(defaulttickets == 1, "The default number of tickets for each process should be 1");
    printf(1, "Should print 1 then 2");
    exit();

@@ -1,0 +1,39 @@
+1. default_tickets.c - works
+
+2. forktickets.c - works
+
+3. getpinfo.c - works
+
+4. high_sleep.c - works
+
+5. high_tickets.c - works
+
+6. processesinuse.c - works
+
+7. random.c - fails most times, rarely passed
+Goal: To have a random, not simply uniform, scheduler
+(Pid difference variance > 150, Direction change > 15%)
+
+Our Code - difference variance always > 150 but Direction change achieved max is 14%. sometimes the check fails with < =6%. mean percentage is 8-12%. 
+
+After CPU=1, Direction change % has dropped to  max 7%.
+
+8. setticket.c - works
+
+9. stress_equal.c - failed
+
+Goal: Achieve variance of <55 in ticks for many processes with the same number of tickets
+
+check failed: Variance too high
+
+10. stress_manylow.c - failed
+
+Goal: Achieve <7% error in tick difference between a single high ticket process and many low ticket processes
+
+Percent error: 96%
+check error: Expected the process with high tickets to get a similar number of ticks as the total number of ticks of the processes with low tickets
+
+11. switch_tickets.c - works
+
+8/11 tests passed.
+3/11 tests failed.

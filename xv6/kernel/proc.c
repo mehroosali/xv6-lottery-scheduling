@@ -5,6 +5,8 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "pstat.h"
+#include "rand.h"
 
 struct {
   struct spinlock lock;
@@ -45,13 +47,23 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  p->tickets = 1;   //set default number of ticket to be 1              
-  p->ticks = 0;     //set default number of ticks to be 0  
+  /* The following code is added by Mehroos Ali mxa200089
+    initialize proc.h types
+  */
+  p->inuse = 1;
+  p->tickets = 1;
+  p->ticks = 0;
+  /* End of added code  */
   release(&ptable.lock);
 
   // Allocate kernel stack if possible.
   if((p->kstack = kalloc()) == 0){
     p->state = UNUSED;
+    /* The following code is added by Jonathan Perry jjp160630
+      mark unused
+    */
+    p->inuse = 0;
+    /* End of added code  */
     return 0;
   }
   sp = p->kstack + KSTACKSIZE;
@@ -141,11 +153,23 @@ fork(void)
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
+    /* The following code is added by Mehroos Ali mxa200089
+      a proc turned into unused
+    */
+    np->inuse = 0;
+    /* End of added code  */
     return -1;
   }
   np->sz = proc->sz;
   np->parent = proc;
+  /* The following code is added by Jonathan Perry (jjp160630)
+    set child proc tickets to parent tickets
+  */
+  np->tickets = np->parent->tickets;
+  /* End of added code  */
+
   *np->tf = *proc->tf;
+
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -227,6 +251,11 @@ wait(void)
         p->kstack = 0;
         freevm(p->pgdir);
         p->state = UNUSED;
+        /* The following code is added by Mehroos Ali mxa200089
+          a proc turned into unused
+        */
+        p->inuse = 0;
+        /* End of added code  */
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;
@@ -266,53 +295,35 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
 
-    // Local Variables to track the tickets
-    int total_tickets = 0;
-    int ticket_no;
-    int tickets_passed = 0;
+    /* The following code is added/modified by Mehroos Ali and mxa200089.
+    Local Variables to track the tickets  */ 
+    int totalRunningTickets = 0;
+    int winningTicket;
 
-     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-            if (p->state == RUNNABLE) {
-                total_tickets += p->tickets;
-            }
-        }
-
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
-
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-      swtch(&cpu->scheduler, proc->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      proc = 0;
+    //calculating total number of ticket. 
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if (p->state == RUNNABLE) {
+        totalRunningTickets += p->tickets;
+      }
     }
-    release(&ptable.lock);
 
-  }
-}
+    winningTicket = next();
+    /* End of added code  */
 
-void
-scheduler2(void)
-{
-  struct proc *p;
-
-  for(;;){
-    // Enable interrupts on this processor.
-    sti();
-
-    // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
+
+      /* The following code is added by Jonathan Perry and jjp160630.
+         find the process with the winningTicket
+      */  
+      winningTicket -= p->tickets;
+      if(winningTicket>0)  {
+        continue;
+      }
+      //p has been chosen to run, increment 'ticks'
+      p->ticks++;
+      /* End of added code  */
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it

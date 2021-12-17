@@ -5,8 +5,17 @@
 #include "mmu.h"
 #include "proc.h"
 #include "sysfunc.h"
+#include "pstat.h"
+#include "spinlock.h"
 
-int total_tickets;
+struct {
+  struct spinlock lock;
+  struct proc proc[NPROC];
+} ptable;
+
+/* The following code is added/modified by Mehroos Ali and mxa200089.
+   system call implementation function to add/update total tickets for a process.
+*/
 
 int 
 sys_settickets(void)
@@ -16,17 +25,39 @@ sys_settickets(void)
   if(number_of_tickets <= 0)  
     return -1;
 
-  total_tickets -= proc->tickets;
   proc->tickets = number_of_tickets;
-  total_tickets += proc->tickets;
+
   return 0;
 }
+/* End of added code  */
 
+/* The following code is added/modified by Mehroos Ali and mxa200089.
+   system call implementation function to get information about all running processes.
+*/
 int 
 sys_getpinfo(void)
 {
+  struct proc *p;
+
+  struct pstat *pst;
+  argptr(0,(void*)&pst,sizeof(*pst));
+  if(pst==NULL)
+    return -1;
+
+  acquire(&ptable.lock);
+
+  int i = 0;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    pst->inuse[i] = p->inuse; // whether this slot of the process table is in use (1 or 0)
+    pst->tickets[i] = p->tickets; // the number of tickets this process has
+    pst->pid[i] = p->pid; // the PID of each process
+    pst->ticks[i] = p->ticks; // the number of ticks each process has accumulated
+    i++;
+  }
+  release(&ptable.lock);
   return 0;
 }
+/* End of added code  */
 
 int
 sys_fork(void)

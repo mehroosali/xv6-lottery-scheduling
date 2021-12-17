@@ -73,28 +73,28 @@ walkpgdir(pde_t *pgdir, const void *va, int create)
 
 //
 void ptprint(pde_t* pgdir) { 
-  pde_t i;
-  pte_t j;
-  pde_t* pde;
-  pte_t* pte;
-  cprintf("pgdir 0x%p\n", pgdir);
+  // pde_t i;
+  // pte_t j;
+  // pde_t* pde;
+  // pte_t* pte;
+  // cprintf("pgdir 0x%p\n", pgdir);
    
-  for(i = 0; i < NPDENTRIES; i++) {
-    pde = &pgdir[i];
+  // for(i = 0; i < NPDENTRIES; i++) {
+  //   pde = &pgdir[i];
     
-    if (*pde & (PTE_P)) { 
-      pte = (pte_t*)PTE_ADDR(*pde);
-      cprintf("..%d: pde 0x%p pa 0x%p\n", i, *pde, pte);
+  //   if (*pde & (PTE_P)) { 
+  //     pte = (pte_t*)PTE_ADDR(*pde);
+  //     cprintf("..%d: pde 0x%p pa 0x%p\n", i, *pde, pte);
 
-      for(j=0; j < NPTENTRIES; j++) {
-        pte_t* x = &pte[j];
-        if (*x & (PTE_U))  { 
-          pte_t* pa = (pte_t*)PTE_ADDR(*x); 
-          cprintf(".. ..%d: pte 0x%p pa 0x%p\n", j, *x, pa);
-        }
-      }
-    }
-  }
+  //     for(j=0; j < NPTENTRIES; j++) {
+  //       pte_t* x = &pte[j];
+  //       if (*x & (PTE_U))  { 
+  //         pte_t* pa = (pte_t*)PTE_ADDR(*x); 
+  //         cprintf(".. ..%d: pte 0x%p pa 0x%p\n", j, *x, pa);
+  //       }
+  //     }
+  //   }
+  // }
 }
 
 

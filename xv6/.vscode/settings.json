@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "user.h": "c",
-        "pstat.h": "c"
+        "pstat.h": "c",
+        "stdio.h": "c",
+        "rand.h": "c"
     }
 }
